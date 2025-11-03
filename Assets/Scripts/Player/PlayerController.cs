@@ -4,6 +4,7 @@ public class PlayerController : MonoBehaviour
 {
     private CharacterController characterController;
 
+    [Header("Movement")]
     [SerializeField] private float walkSpeed = 5f;
     [SerializeField] private float runSpeed = 8f;
     [SerializeField] private float crouchSpeed = 2.5f;
@@ -25,6 +26,7 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
+
         characterController = GetComponent<CharacterController>();
         speed = walkSpeed;
         currentHeight = characterController.height;
@@ -40,14 +42,25 @@ public class PlayerController : MonoBehaviour
 
         // Smooth crouch interpolation
         float targetHeight = crouching ? crouchHeight : standHeight;
+
+
         if (Mathf.Abs(characterController.height - targetHeight) > 0.01f)
         {
-            characterController.height = Mathf.Lerp(
-                characterController.height,
-                targetHeight,
-                Time.deltaTime / crouchTransitionTime
-            );
+            crouchTimer += Time.deltaTime / crouchTransitionTime;
+            crouchTimer = Mathf.Clamp01(crouchTimer);
+
+
+            float startHeight = crouching ? standHeight : crouchHeight;
+
+
+            characterController.height = Mathf.Lerp(startHeight, targetHeight, crouchTimer);
         }
+        else
+        {
+
+            crouchTimer = 0f;
+        }
+        Debug.Log(characterController.height);
     }
 
     public void ProcessMove(Vector2 input)
