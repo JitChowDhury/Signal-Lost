@@ -6,10 +6,14 @@ public class WaveTerminal : Interactable
     public GameObject puzzleCanvas;        // assign your wave puzzle UI
     public PlayerLook playerLook;          // assign player look script
     public InputManager inputManager;      // assign player input
-    // public AudioSource ambientHum;         // optional – looping hum sound
-
+                                           // public AudioSource ambientHum;         // optional – looping hum sound
+    private bool solved = false;
     private bool isActive = false;
 
+    private void Awake()
+    {
+        TerminalManager.Instance.RegisterTerminal(this);
+    }
     protected override void Interact()
     {
         if (!isActive)
@@ -39,14 +43,16 @@ public class WaveTerminal : Interactable
     {
         isActive = false;
         puzzleCanvas.SetActive(false);
-
-        // Re-enable player control
         playerLook.enabled = true;
         inputManager.enabled = true;
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        // if (ambientHum) ambientHum.Stop();
+        if (!solved)
+        {
+            solved = true;
+            TerminalManager.Instance.TerminalSolved(this);
+        }
     }
 }

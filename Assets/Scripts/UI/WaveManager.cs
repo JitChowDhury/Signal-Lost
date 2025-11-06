@@ -45,11 +45,28 @@ public class WaveManager : MonoBehaviour
         waveGraphic.playerPhase = phaseSlider.value;
 
         // Check match
+        // Calculate differences
         float df = Mathf.Abs(waveGraphic.playerFrequency - waveGraphic.targetFrequency);
         float da = Mathf.Abs(waveGraphic.playerAmplitude - waveGraphic.targetAmplitude);
-        float dp = Mathf.Abs(Mathf.DeltaAngle(waveGraphic.playerPhase * Mathf.Rad2Deg, waveGraphic.targetPhase * Mathf.Rad2Deg) * Mathf.Deg2Rad);
 
-        if (df < toleranceFrequency && da < toleranceAmplitude && dp < tolerancePhase)
+        // Normalize phase difference (wrap-around safe)
+        float dp = Mathf.Abs(waveGraphic.playerPhase - waveGraphic.targetPhase);
+        dp = Mathf.Repeat(dp, Mathf.PI * 2f);
+        dp = Mathf.Min(dp, Mathf.PI * 2f - dp); // shortest phase distance
+
+        // Adjust tolerances — easier to match visually
+        float freqTol = 0.15f;
+        float ampTol = 0.15f;
+        float phaseTol = 0.25f;
+
+        // Visual feedback while tuning
+        float closeness = 1f - Mathf.Clamp01((df / freqTol + da / ampTol + dp / phaseTol) / 3f);
+        Color mixColor = Color.Lerp(Color.magenta, Color.green, closeness);
+        waveGraphic.playerColor = new Color(mixColor.r, mixColor.g, mixColor.b, 0.9f);
+        waveGraphic.SetAllDirty();
+
+        // Lock check
+        if (df < freqTol && da < ampTol && dp < phaseTol)
         {
             locked = true;
             OnSignalLocked();
@@ -84,6 +101,10 @@ public class WaveManager : MonoBehaviour
 
     void OnSignalLocked()
     {
+        waveGraphic.playerAmplitude = waveGraphic.targetAmplitude;
+        waveGraphic.playerFrequency = waveGraphic.targetFrequency;
+        waveGraphic.playerPhase = waveGraphic.targetPhase;
+
         statusText.text = "<color=#00FFAA>SIGNAL LOCKED ✓</color>";
         waveGraphic.playerColor = Color.green;
         waveGraphic.targetColor = Color.green;
@@ -92,13 +113,9 @@ public class WaveManager : MonoBehaviour
         // if (audioSource && successClip)
         //     audioSource.PlayOneShot(successClip);
 
-        // // Optional: ambient static stop
-        // if (staticSource)
-        //     staticSource.Stop();
-
-        // Automatically close puzzle after delay
         StartCoroutine(CloseAfterDelay());
     }
+
 
     IEnumerator CloseAfterDelay()
     {
