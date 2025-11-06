@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -83,8 +84,29 @@ public class WaveManager : MonoBehaviour
 
     void OnSignalLocked()
     {
-        statusText.text = "SIGNAL LOCKED";
-        // TODO: trigger audio, animations, open door etc.
-        Debug.Log("Signal locked! implement success handlers.");
+        statusText.text = "<color=#00FFAA>SIGNAL LOCKED ✓</color>";
+        waveGraphic.playerColor = Color.green;
+        waveGraphic.targetColor = Color.green;
+        waveGraphic.SetAllDirty();
+
+        // if (audioSource && successClip)
+        //     audioSource.PlayOneShot(successClip);
+
+        // // Optional: ambient static stop
+        // if (staticSource)
+        //     staticSource.Stop();
+
+        // Automatically close puzzle after delay
+        StartCoroutine(CloseAfterDelay());
+    }
+
+    IEnumerator CloseAfterDelay()
+    {
+        yield return new WaitForSeconds(2f);
+
+        // Find the active WaveTerminal and close it
+        WaveTerminal terminal = FindFirstObjectByType<WaveTerminal>();
+        if (terminal != null)
+            terminal.ClosePuzzle();
     }
 }
