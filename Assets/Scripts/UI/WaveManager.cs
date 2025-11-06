@@ -23,6 +23,7 @@ public class WaveManager : MonoBehaviour
     public float toleranceFrequency = 0.08f;
     public float toleranceAmplitude = 0.08f;
     public float tolerancePhase = 0.15f; // radians
+    private WaveTerminal currentTerminal;
 
     bool locked = false;
 
@@ -101,6 +102,11 @@ public class WaveManager : MonoBehaviour
 
     void OnSignalLocked()
     {
+        if (currentTerminal != null)
+        {
+            currentTerminal.MarkSolved();
+            currentTerminal.CloseAfterDelay(2f);
+        }
         waveGraphic.playerAmplitude = waveGraphic.targetAmplitude;
         waveGraphic.playerFrequency = waveGraphic.targetFrequency;
         waveGraphic.playerPhase = waveGraphic.targetPhase;
@@ -113,7 +119,7 @@ public class WaveManager : MonoBehaviour
         // if (audioSource && successClip)
         //     audioSource.PlayOneShot(successClip);
 
-        StartCoroutine(CloseAfterDelay());
+        // StartCoroutine(CloseAfterDelay());
     }
 
 
@@ -126,4 +132,16 @@ public class WaveManager : MonoBehaviour
         if (terminal != null)
             terminal.ClosePuzzle();
     }
+    public void SetTargetValues(float freq, float amp, float phase, WaveTerminal terminal)
+    {
+        waveGraphic.targetFrequency = freq;
+        waveGraphic.targetAmplitude = amp;
+        waveGraphic.targetPhase = phase;
+        currentTerminal = terminal;
+
+        locked = false;
+        statusText.text = "TUNING...";
+        waveGraphic.SetAllDirty();
+    }
+
 }

@@ -1,41 +1,52 @@
+using System.Collections;
 using UnityEngine;
 
 public class WaveTerminal : Interactable
 {
     [Header("Puzzle UI")]
-    public GameObject puzzleCanvas;        // assign your wave puzzle UI
-    public PlayerLook playerLook;          // assign player look script
-    public InputManager inputManager;      // assign player input
-                                           // public AudioSource ambientHum;         // optional – looping hum sound
-    private bool solved = false;
-    private bool isActive = false;
+    public GameObject puzzleCanvas;      // shared canvas for all terminals
+    public PlayerLook playerLook;
+    public InputManager inputManager;
 
-    private void Awake()
+    //public AudioSource ambientHum;
+
+    [Header("Target Signal Settings")]
+    public float targetFrequency = 1f;
+    public float targetAmplitude = 1f;
+    public float targetPhase = 0f;
+
+    [Header("Visual Feedback")]
+    public Light terminalLight;
+    public Renderer indicatorMesh;
+    public Color solvedColor = Color.green;
+
+    private bool isActive = false;
+    private bool solved = false;
+
+    void Start()
     {
         TerminalManager.Instance.RegisterTerminal(this);
     }
+
     protected override void Interact()
     {
-        if (!isActive)
-            OpenPuzzle();
+        if (solved || isActive) return;
+        OpenPuzzle();
     }
 
     void OpenPuzzle()
     {
         isActive = true;
-
-        // Disable player control
         playerLook.enabled = false;
         inputManager.enabled = false;
-
-        // Enable UI
-        puzzleCanvas.SetActive(true);
-
-        // Cursor
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+        puzzleCanvas.SetActive(true);
 
-        // Optional sound
+        // Tell the shared WaveManager which terminal is active
+        WaveManager wave = puzzleCanvas.GetComponent<WaveManager>();
+        wave.SetTargetValues(targetFrequency, targetAmplitude, targetPhase, this);
+
         // if (ambientHum) ambientHum.Play();
     }
 
@@ -45,14 +56,36 @@ public class WaveTerminal : Interactable
         puzzleCanvas.SetActive(false);
         playerLook.enabled = true;
         inputManager.enabled = true;
-
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        if (!solved)
-        {
-            solved = true;
-            TerminalManager.Instance.TerminalSolved(this);
-        }
+        // if (ambientHum) ambientHum.Stop();
     }
+
+    public void MarkSolved()
+    {
+        solved = true;
+
+
+
+        TerminalManager.Instance.TerminalSolved(this);
+    }
+
+    public void CloseAfterDelay(float delay)
+    {
+        StartCoroutine(CloseRoutine(delay));
+
+    }
+
+    private IEnumerator CloseRoutine(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (indicatorMesh)
+            indicatorMesh.material.SetColor("_EmissionColor", solvedColor * 2f);
+
+        if (terminalLight)
+            terminalLight.color = solvedColor;
+        ClosePuzzle();
+    }
+    public bool IsSolved => solved;
 }
