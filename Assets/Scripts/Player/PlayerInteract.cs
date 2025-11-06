@@ -18,6 +18,14 @@ public class PlayerInteract : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
+        if (IsPuzzleActive())
+        {
+            playerUI.UpdateText(string.Empty);
+            return; // don't process raycasts or prompts
+        }
+
+
         playerUI.UpdateText(string.Empty);
         Ray ray = new Ray(cam.transform.position, cam.transform.forward);
         Debug.DrawRay(ray.origin, ray.direction * distance, Color.red);
@@ -39,5 +47,10 @@ public class PlayerInteract : MonoBehaviour
         }
 
 
+    }
+    private bool IsPuzzleActive()
+    {
+        WaveManager wave = FindFirstObjectByType<WaveManager>();
+        return wave != null && wave.gameObject.activeInHierarchy;
     }
 }

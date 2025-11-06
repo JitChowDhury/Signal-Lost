@@ -24,6 +24,9 @@ public class WaveManager : MonoBehaviour
     public float toleranceAmplitude = 0.08f;
     public float tolerancePhase = 0.15f; // radians
     private WaveTerminal currentTerminal;
+    [Header("Audio")]
+    public AudioSource audioSource;
+    public AudioClip successClip;
 
     bool locked = false;
 
@@ -55,16 +58,15 @@ public class WaveManager : MonoBehaviour
         dp = Mathf.Repeat(dp, Mathf.PI * 2f);
         dp = Mathf.Min(dp, Mathf.PI * 2f - dp); // shortest phase distance
 
-        // Adjust tolerances — easier to match visually
-        float freqTol = 0.15f;
-        float ampTol = 0.15f;
-        float phaseTol = 0.25f;
+        float freqTol = 0.25f;   // frequency difference allowed
+        float ampTol = 0.25f;   // amplitude difference allowed
+        float phaseTol = 0.35f;  // phase offset allowed
 
         // Visual feedback while tuning
         float closeness = 1f - Mathf.Clamp01((df / freqTol + da / ampTol + dp / phaseTol) / 3f);
-        Color mixColor = Color.Lerp(Color.magenta, Color.green, closeness);
-        waveGraphic.playerColor = new Color(mixColor.r, mixColor.g, mixColor.b, 0.9f);
+        waveGraphic.playerColor = Color.Lerp(Color.magenta, Color.green, closeness);
         waveGraphic.SetAllDirty();
+
 
         // Lock check
         if (df < freqTol && da < ampTol && dp < phaseTol)
@@ -111,15 +113,15 @@ public class WaveManager : MonoBehaviour
         waveGraphic.playerFrequency = waveGraphic.targetFrequency;
         waveGraphic.playerPhase = waveGraphic.targetPhase;
 
-        statusText.text = "<color=#00FFAA>SIGNAL LOCKED ✓</color>";
+        statusText.text = "<color=#00FFAA>SIGNAL LOCKED</color>";
         waveGraphic.playerColor = Color.green;
         waveGraphic.targetColor = Color.green;
         waveGraphic.SetAllDirty();
 
-        // if (audioSource && successClip)
-        //     audioSource.PlayOneShot(successClip);
+        if (audioSource && successClip)
+            audioSource.PlayOneShot(successClip);
 
-        // StartCoroutine(CloseAfterDelay());
+        StartCoroutine(CloseAfterDelay());
     }
 
 

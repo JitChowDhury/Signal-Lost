@@ -4,11 +4,12 @@ using UnityEngine;
 public class WaveTerminal : Interactable
 {
     [Header("Puzzle UI")]
-    public GameObject puzzleCanvas;      // shared canvas for all terminals
+    public GameObject puzzleCanvas;
     public PlayerLook playerLook;
     public InputManager inputManager;
+    public PlayerUI playerUI;
 
-    //public AudioSource ambientHum;
+    public AudioSource ambientHum;
 
     [Header("Target Signal Settings")]
     public float targetFrequency = 1f;
@@ -36,18 +37,20 @@ public class WaveTerminal : Interactable
 
     void OpenPuzzle()
     {
+
         isActive = true;
         playerLook.enabled = false;
         inputManager.enabled = false;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         puzzleCanvas.SetActive(true);
+        if (playerUI != null)
+            playerUI.UpdateText(string.Empty);
 
-        // Tell the shared WaveManager which terminal is active
         WaveManager wave = puzzleCanvas.GetComponent<WaveManager>();
         wave.SetTargetValues(targetFrequency, targetAmplitude, targetPhase, this);
 
-        // if (ambientHum) ambientHum.Play();
+        if (ambientHum) ambientHum.Play();
     }
 
     public void ClosePuzzle()
@@ -59,7 +62,7 @@ public class WaveTerminal : Interactable
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        // if (ambientHum) ambientHum.Stop();
+        if (ambientHum) ambientHum.Stop();
     }
 
     public void MarkSolved()
@@ -81,7 +84,7 @@ public class WaveTerminal : Interactable
     {
         yield return new WaitForSeconds(delay);
         if (indicatorMesh)
-            indicatorMesh.material.SetColor("_EmissionColor", solvedColor * 2f);
+            indicatorMesh.material.SetColor("_EmissionColor", solvedColor * .2f);
 
         if (terminalLight)
             terminalLight.color = solvedColor;
